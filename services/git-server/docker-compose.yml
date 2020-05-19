@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  gitea:
+    image: kunde21/gitea-arm
+    container_name: gitea
+    restart: unless-stopped
+    volumes:
+      - ${PATH_CONFIG}/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "10080:3000"
+      - "22:22"
+    networks:
+      - gitea
+    env_file:
+      - gitea.env
+
+  drone:
+    image: drone/drone:1
+    container_name: drone
+    restart: unless-stopped
+    ports:
+      - 8082:80
+    volumes:
+      - ${PATH_CONFIG}/drone/:/data
+    env_file:
+      - drone.env
+    networks:
+      - gitea
+
+  nginx:
+    container_name: nginx-git
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: nginx-git
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ${PATH_CONFIG}/certbot/conf:/etc/letsencrypt
+      - ${PATH_CONFIG}/certbot/www:/var/www/certbot
+    networks:
+      - gitea
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:arm32v6-latest
+    container_name: certbot
+    volumes:
+      - ${PATH_CONFIG}/certbot/conf:/etc/letsencrypt
+      - ${PATH_CONFIG}/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  gitea:
+    driver: bridge

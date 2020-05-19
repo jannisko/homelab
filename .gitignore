@@ -1,2 +1,3 @@
 services/media-server/transmission.env
+services/git-server/drone.env
 secrets.env
