@@ -1,0 +1,123 @@
+version: '3'
+
+services:
+
+  plex:
+    image: linuxserver/plex:arm32v7-latest
+    container_name: plex
+    # recommended network mode, otherwise you have to publish 10 ports
+    network_mode: host
+    env_file:
+      - media.env
+    volumes:
+      - ${PATH_CONFIG}/plex:/config
+      - ${PATH_STORAGE}/Shows:/tv
+      - ${PATH_STORAGE}/Movies:/movies
+    restart: unless-stopped
+
+  radarr:
+    image: linuxserver/radarr:arm32v7-latest
+    container_name: radarr
+    env_file:
+      - media.env
+    volumes:
+      - ${PATH_CONFIG}/radarr:/config
+      - ${PATH_STORAGE}/Movies:/movies
+      - ${PATH_STORAGE}/Downloads:/downloads
+    ports:
+      - 7878:7878
+    networks:
+      - media
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr:arm32v7-latest
+    container_name: sonarr
+    env_file:
+      - media.env
+    volumes:
+      - ${PATH_CONFIG}/sonarr:/config
+      - ${PATH_STORAGE}/Shows:/tv
+      - ${PATH_STORAGE}/Downloads:/downloads
+    ports:
+      - 8989:8989
+    networks:
+      - media
+    restart: unless-stopped
+
+  nzbget:
+    image: linuxserver/nzbget:arm32v7-latest
+    container_name: nzbget
+    env_file:
+      - media.env
+    volumes:
+      - ${PATH_CONFIG}/nzbget:/config
+      - ${PATH_STORAGE}/Downloads:/downloads
+    ports:
+      - 6789:6789
+    networks:
+      - media
+    restart: unless-stopped
+
+  jackett:
+    image: linuxserver/jackett:arm32v7-latest
+    container_name: jackett
+    env_file:
+      - media.env
+    volumes:
+      - ${PATH_CONFIG}/jackett:/config
+      - ${PATH_STORAGE}/Torrents:/downloads
+    ports:
+      - 9117:9117
+    networks:
+      - media
+    restart: unless-stopped
+
+  transmission:
+    image: haugene/transmission-openvpn:latest-armhf
+    container_name: transmission
+    cap_add:
+      - NET_ADMIN
+    env_file:
+      - transmission.env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - ${PATH_STORAGE}/Downloads:/data
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 9091:9091
+    networks:
+      - media
+    devices:
+      - "/dev/net/tun"
+    restart: unless-stopped
+
+  # set up a reverse proxy so google calendar can access sonar/radarr calendars
+  nginx:
+    container_name: nginx-media
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: nginx-media
+    ports:
+      - 8001:8001
+    networks:
+      - media
+    restart: unless-stopped
+
+  organizr:
+    image: organizrtools/organizr-v2:armhf
+    container_name: organizr
+    volumes:
+      - ${PATH_CONFIG}/organizr:/config
+    env_file:
+      - media.env
+    ports:
+      - 8000:80
+    restart: unless-stopped
+
+networks:
+  media:
+    driver: bridge
