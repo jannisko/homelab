@@ -1,14 +1,11 @@
+# Homelab
 
+![deployed](https://github.com/jannisko/homelab/workflows/deploy/badge.svg)
 
+A continuously deployed config for my homelab docker services running on a RaspberryPi 4.
 
-```bash
-set -a
-source secrets.env
-source .env
+This includes:
+- media-server (Plex, Radarr, ...)
+- git-server (Gitea, Drone, nginx-proxy)
 
-envsubst < services/media-server/transmission.env.template > services/media-server/transmission.env
-envsubst < services/git-server/drone.env.template > services/git-server/drone.env
-
-docker-compose -f services/media-server/docker-compose.yml up -d
-docker-compose -f services/git-server/docker-compose.yml up -d
-```
+This repository should only serve as inspiration, as there is a lot of configuration needed to get everthing running.
