@@ -20,13 +20,14 @@ jobs:
           cd ${{ secrets.REPO_PATH }}
           git pull
           set -a
-          export ${{ secrets.OPENVPN_USERNAME }}
-          export ${{ secrets.OPENVPN_PASSWORD }}
-          export ${{ secrets.API_KEY_RADARR }}
-          export ${{ secrets.API_KEY_SONARR }}
-          export ${{ secrets.DRONE_GITEA_CLIENT_ID }}
-          export ${{ secrets.DRONE_GITEA_CLIENT_SECRET }}
-          export ${{ secrets.DRONE_RPC_SECRET }}          source .env
+          export OPENVPN_USERNAME=${{ secrets.OPENVPN_USERNAME }}
+          export OPENVPN_PASSWORD=${{ secrets.OPENVPN_PASSWORD }}
+          export API_KEY_RADARR=${{ secrets.API_KEY_RADARR }}
+          export API_KEY_SONARR=${{ secrets.API_KEY_SONARR }}
+          export DRONE_GITEA_CLIENT_ID=${{ secrets.DRONE_GITEA_CLIENT_ID }}
+          export DRONE_GITEA_CLIENT_SECRET=${{ secrets.DRONE_GITEA_CLIENT_SECRET }}
+          export DRONE_RPC_SECRET=${{ secrets.DRONE_RPC_SECRET }}          
+          source .env
           envsubst < services/media-server/transmission.env.template > services/media-server/transmission.env
           envsubst < services/git-server/drone.env.template > services/git-server/drone.env
           docker-compose -f services/media-server/docker-compose.yml up -d
