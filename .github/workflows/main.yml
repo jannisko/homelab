@@ -18,4 +18,16 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cd ${{ secrets.REPO_PATH }}
-          ls -la
+          git pull
+          set -a
+          export ${{ secrets.OPENVPN_USERNAME }}
+          export ${{ secrets.OPENVPN_PASSWORD }}
+          export ${{ secrets.API_KEY_RADARR }}
+          export ${{ secrets.API_KEY_SONARR }}
+          export ${{ secrets.DRONE_GITEA_CLIENT_ID }}
+          export ${{ secrets.DRONE_GITEA_CLIENT_SECRET }}
+          export ${{ secrets.DRONE_RPC_SECRET }}          source .env
+          envsubst < services/media-server/transmission.env.template > services/media-server/transmission.env
+          envsubst < services/git-server/drone.env.template > services/git-server/drone.env
+          docker-compose -f services/media-server/docker-compose.yml up -d
+          docker-compose -f services/git-server/docker-compose.yml up -d
